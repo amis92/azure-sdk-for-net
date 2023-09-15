@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Linq;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Storage.Common;
 using Microsoft.Azure.WebJobs.Extensions.Storage.Common.Listeners;
@@ -75,8 +76,8 @@ namespace Microsoft.Extensions.Hosting
         public static IWebJobsBuilder AddAzureStorageQueuesScaleForTrigger(this IWebJobsBuilder builder, TriggerMetadata triggerMetadata)
         {
             builder.Services.AddSingleton(serviceProvider => new QueueScalerProvider(serviceProvider, triggerMetadata));
-            builder.Services.AddSingleton<IScaleMonitorProvider>(serviceProvider => serviceProvider.GetRequiredService<QueueScalerProvider>());
-            builder.Services.AddSingleton<ITargetScalerProvider>(serviceProvider => serviceProvider.GetRequiredService<QueueScalerProvider>());
+            builder.Services.AddSingleton<IScaleMonitorProvider>(serviceProvider => serviceProvider.GetServices<QueueScalerProvider>().Where(x => x.GetMonitor().Descriptor.FunctionId == triggerMetadata.FunctionName).First());
+            builder.Services.AddSingleton<ITargetScalerProvider>(serviceProvider => serviceProvider.GetServices<QueueScalerProvider>().Where(x => x.GetTargetScaler().TargetScalerDescriptor.FunctionId == triggerMetadata.FunctionName).First());
 
             return builder;
         }
